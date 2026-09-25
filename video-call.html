@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Call</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --accent:#5b8def; --text:#eef1f6; --muted:#8b93a3;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #screen-join{
+    width:100%; max-width:380px; padding:32px 28px; background:var(--panel);
+    border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  h1{font-size:22px; margin:0 0 6px;}
+  p.sub{color:var(--muted); font-size:14px; margin:0 0 24px;}
+  input{
+    width:100%; padding:14px 16px; font-size:16px; border-radius:10px;
+    border:1px solid #2a2e38; background:#0f1115; color:var(--text); margin-bottom:14px;
+    text-transform:lowercase;
+  }
+  input:focus{outline:2px solid var(--accent);}
+  button{
+    width:100%; padding:14px; font-size:16px; font-weight:600; border:none;
+    border-radius:10px; background:var(--accent); color:white; cursor:pointer;
+  }
+  button:hover{opacity:.92;}
+  .hint{font-size:12px; color:var(--muted); margin-top:14px; line-height:1.5;}
+  #screen-call{display:none; width:100vw; height:100vh; position:fixed; inset:0; background:#000;}
+  #jitsi-container{width:100%; height:100%;}
+</style>
+</head>
+<body>
+
+  <div id="screen-join">
+    <h1>Start or join a call</h1>
+    <p class="sub">Enter a code. Anyone with the same code joins the same call — one-to-one or a group.</p>
+    <input id="room-code" placeholder="e.g. blue-otter-42" autocomplete="off" autocapitalize="off">
+    <button id="join-btn">Join call</button>
+    <div class="hint">No account, no data saved anywhere. Whoever enters this code first starts the call; others join it. Share the code with anyone you want in it.</div>
+  </div>
+
+  <div id="screen-call">
+    <div id="jitsi-container"></div>
+  </div>
+
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <script>
+    const joinScreen = document.getElementById('screen-join');
+    const callScreen = document.getElementById('screen-call');
+    const input = document.getElementById('room-code');
+
+    function slugify(v){
+      return v.trim().toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+    }
+
+    function startCall(code){
+      joinScreen.style.display = 'none';
+      callScreen.style.display = 'block';
+      new JitsiMeetExternalAPI("meet.jit.si", {
+        roomName: "call-code-" + code,
+        parentNode: document.getElementById('jitsi-container'),
+        width: "100%",
+        height: "100%",
+        configOverwrite: { prejoinPageEnabled: false, disableDeepLinking: true },
+        interfaceConfigOverwrite: { SHOW_JITSI_WATERMARK: false, SHOW_WATERMARK_FOR_GUESTS: false }
+      });
+    }
+
+    document.getElementById('join-btn').addEventListener('click', () => {
+      const code = slugify(input.value);
+      if (!code) { input.focus(); return; }
+      startCall(code);
+    });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('join-btn').click(); });
+  </script>
+
+</body>
+</html>
